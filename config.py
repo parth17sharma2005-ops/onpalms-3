@@ -9,14 +9,8 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'palms-chatbot-secret-key-2024'
     OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
     
-    # CORS settings
-    CORS_ORIGINS = [
-        "https://smartwms.onpalms.com",
-        "https://onpalms.com",
-        "https://www.onpalms.com",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000"
-    ]
+    # CORS settings - Allow all origins for now
+    CORS_ORIGINS = ["*"]
     
     # File upload settings
     UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
