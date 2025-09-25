@@ -41,7 +41,19 @@ def create_app(config_name=None):
     @app.route("/")
     def home():
         """Home page"""
-        return render_template("index.html")
+        return jsonify({
+            "message": "PALMS™ Chatbot API - Enhanced Version",
+            "status": "online",
+            "version": "2.0",
+            "endpoints": {
+                "health": "/health",
+                "chat": "/chat",
+                "save_lead": "/save_lead", 
+                "submit_info": "/submit_info",
+                "leads": "/leads?api_key=your-key"
+            },
+            "timestamp": datetime.now().isoformat()
+        })
     
     @app.route("/health", methods=["GET"])
     def health_check():
@@ -456,26 +468,7 @@ def create_app(config_name=None):
             logger.error(f"Error getting analytics: {e}")
             return jsonify({"error": "Unable to retrieve analytics"}), 500
     
-    # Template routes (keep existing ones)
-    @app.route("/clients")
-    def clients():
-        return render_template("clients.html")
-    
-    @app.route("/features") 
-    def features():
-        return render_template("features.html")
-    
-    @app.route("/products")
-    def products():
-        return render_template("products.html")
-    
-    @app.route("/pricing")
-    def pricing():
-        return render_template("pricing.html")
-    
-    @app.route("/locations")
-    def locations():
-        return render_template("locations.html")
+    # API-only routes - no templates needed for chatbot service
     
     return app
 
