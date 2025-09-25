@@ -26,7 +26,7 @@ def create_app(config_name=None):
     # Initialize extensions
     CORS(app, 
          origins=app.config['CORS_ORIGINS'],
-         allow_headers=["Content-Type", "Authorization", "X-Requested-With", "X-API-Key"],
+         allow_headers=["Content-Type", "Authorization", "X-Requested-With", "X-API-Key", "X-Session-Id"],
          methods=["GET", "POST", "OPTIONS"],
          supports_credentials=True)
     
