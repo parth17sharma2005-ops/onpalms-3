@@ -121,6 +121,19 @@ def is_business_email(email):
     domain = email.split('@')[-1].lower()
     return not any(domain == d for d in personal_domains)
 
+def should_show_inline_form(user_input, conversation_depth=0):
+    """Determine if we should show inline form for lead capture"""
+    # Patterns that suggest user interest but needs info capture
+    interest_patterns = [
+        "pricing", "cost", "price", "quote", "budget",
+        "contact", "sales", "team", "speak", "call",
+        "more information", "details", "learn more",
+        "interested", "purchase", "buy", "subscribe"
+    ]
+    
+    # Show form if user shows interest and we don't have their info
+    return any(pattern in user_input.lower() for pattern in interest_patterns)
+
 def get_chat_response(user_input, extra_context=''):
     """Main chat response function"""
     try:
@@ -128,13 +141,15 @@ def get_chat_response(user_input, extra_context=''):
         greetings = ["hello", "hi", "hey", "greetings", "good morning", "good afternoon", "good evening"]
         is_greeting = any(greet in user_input.lower() for greet in greetings)
         wants_demo = detect_demo_request(user_input)
+        wants_info_form = should_show_inline_form(user_input)
 
         # Handle greetings
         if is_greeting:
             return {
                 'response': "Hello! I'm here to help you learn about PALMS™ Warehouse Management System. How can I assist you today?",
                 'show_demo_popup': False,
-                'show_options': False
+                'show_options': False,
+                'show_info_form': False
             }
         
         # Handle demo requests
@@ -142,7 +157,8 @@ def get_chat_response(user_input, extra_context=''):
             return {
                 'response': "I'd be happy to show you a demo of PALMS™! Our warehouse management system can really transform your operations. Please fill out the form below and we'll get you set up with a personalized demonstration.",
                 'show_demo_popup': True,
-                'show_options': False
+                'show_options': False,
+                'show_info_form': False
             }
         
         # Get relevant content from WordPress
@@ -177,7 +193,8 @@ Please answer based on the context provided. Keep it conversational and helpful.
         return {
             'response': answer,
             'show_demo_popup': False,
-            'show_options': True
+            'show_options': True,
+            'show_info_form': wants_info_form
         }
         
     except Exception as e:
@@ -188,7 +205,8 @@ Please answer based on the context provided. Keep it conversational and helpful.
         return {
             'response': "I'm experiencing a technical difficulty right now. PALMS™ is a comprehensive warehouse management system that helps businesses optimize their operations. Would you like to know more about our features?",
             'show_demo_popup': False,
-            'show_options': False
+            'show_options': False,
+            'show_info_form': False
         }
 
 if __name__ == "__main__":
