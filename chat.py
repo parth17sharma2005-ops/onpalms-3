@@ -277,9 +277,9 @@ Remember: It's better to admit you need to check something than to make up infor
 """}
         ]
         
-        # Get response from OpenAI with GPT-4.1 turbo
+        # Get response from OpenAI with GPT-4
         response = openai.ChatCompletion.create(
-            model="gpt-4.1-turbo",
+            model="gpt-4",
             messages=messages,
             max_tokens=200,
             temperature=0.5  # Lower temperature for more focused responses
