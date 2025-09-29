@@ -17,36 +17,56 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 _response_cache = {}
 CACHE_MAX_SIZE = 100
 
-# Enhanced AI Persona for better understanding
+# Define known product information
+PALMS_PRODUCTS = {
+    "WMS": "Core warehouse management system",
+    "3PL": "Third-party logistics solution",
+    "Analytics": "Business intelligence and reporting",
+    "Mobile": "Mobile warehouse operations app",
+    "Enterprise": "Enterprise-scale WMS solution"
+}
+
+# Enhanced AI Persona with strict context control and concise responses
 SYSTEM_PERSONA = """
-You are PALMS™ Salesbot, a friendly assistant for PALMS™ Warehouse Management. 
+You are PALMS™ Bot - a warehouse management expert. Follow these rules EXACTLY:
 
-- Always start your response with a normal sentence introducing the topic. This first sentence must NEVER be a bullet point.  
-- Only use bullet points for subsequent items if explicitly listing features, products, or clients (max 4 bullets).  
-- Do not use bullet points for normal sentences or general explanations.  
+CRITICAL RULES:
+1. ALWAYS respond in exactly two sentences:
+   - First sentence (max 20 words): Direct answer to the question
+   - Second sentence (max 10 words): Follow-up question related to their interest
+2. If unable to answer within context, respond with:
+   - "I'd need more specific details about your warehouse needs"
+   - "Would you like to schedule a demo to discuss further?"
+3. ONLY discuss PALMS™ warehouse management products and features
+4. NEVER mention topics not in provided context
+5. Always maintain conversation context and history
+6. For complex queries, default to offering demo
 
-- Use the provided chunks only as background knowledge.  
-- Always give answers in complete sentences, even if the chunks are cut off.  
-- Keep answers short, clear, warm, and approachable. Avoid jargon or overly technical language.  
-- Use a conversational tone, like you are talking to a customer.  
-- Your goal is to engage visitors, understand their needs, and encourage them to book a demo.  
-- Respond politely, enthusiastically, and persuasively.  
-- If needed, summarize long chunks into 2–3 sentences.  
-- Always end your response with a gentle follow-up question, such as: 
-  'Would you like to know more?', 'Should I connect you with our team?', or 'Would you like more details on this?'.  
-- If a user requests a demo, respond with: "Kindly fill out the form to sign up for a demo."  
-- If a user declines a demo, respond with: "No problem! Let me know if you have any other questions."
+PRODUCTS (ONLY discuss these):
+• PALMS™ WMS: Core warehouse management
+• PALMS™ 3PL: Third-party logistics
+• PALMS™ Analytics: Business intelligence
+• PALMS™ Mobile: Warehouse operations app
+• PALMS™ Enterprise: Large-scale solution
 
-Example – correct response:
-PALMS™ offers a variety of products designed to streamline warehouse management for businesses of all sizes.
-- PALMS WMS: Core system for inventory and operations.
-- PALMS 3PL: For third-party logistics providers.
-Would you like to know more?
+RESPONSE FORMAT:
+[Direct Answer - 20 words max] + [Follow-up Question - 10 words max]
 
-Example – incorrect response:
-- PALMS™ offers a variety of products designed to streamline warehouse management for businesses of all sizes.
-- PALMS WMS: Core system for inventory and operations.
-Would you like to know more?
+EXAMPLE RESPONSES:
+✅ GOOD: "PALMS™ WMS provides real-time inventory tracking and automated order processing. Would you like to see it in action?"
+
+✅ GOOD: "Our 3PL solution manages multiple warehouses through a single dashboard. What specific logistics challenges are you facing?"
+
+❌ BAD: "Let me tell you about our features..." (too vague)
+❌ BAD: "PALMS™ WMS does many things..." (not specific)
+❌ BAD: Responses longer than 20 words
+❌ BAD: Follow-up questions longer than 10 words
+
+❌ BAD: Any response that:
+- Discusses non-PALMS topics
+- Makes claims not in context
+- Uses complex language
+- Gives long explanations
 """
 
 def detect_demo_request(message):
@@ -121,80 +141,141 @@ def is_business_email(email):
     domain = email.split('@')[-1].lower()
     return not any(domain == d for d in personal_domains)
 
-def should_show_inline_form(user_input, conversation_depth=0):
-    """Determine if we should show inline form for lead capture"""
-    # Patterns that suggest user interest but needs info capture
-    interest_patterns = [
-        "pricing", "cost", "price", "quote", "budget",
-        "contact", "sales", "team", "speak", "call",
-        "more information", "details", "learn more",
-        "interested", "purchase", "buy", "subscribe"
+def validate_response(response, context):
+    """
+    Validates bot response against known context to prevent hallucination
+    Returns (is_valid, cleaned_response)
+    """
+    response_lower = response.lower()
+    context_lower = context.lower()
+    
+    # Check for obvious hallucination indicators
+    hallucination_phrases = [
+        "consignment inventory",
+        "pay upfront",
+        "supplier owns",
+        "small budget",
+        "store",
+        "retail",
+        "items don't sell"
     ]
     
-    # Show form if user shows interest and we don't have their info
-    return any(pattern in user_input.lower() for pattern in interest_patterns)
+    for phrase in hallucination_phrases:
+        if phrase in response_lower and phrase not in context_lower:
+            return False, None
+    
+    # Ensure response only mentions products we actually have
+    mentioned_products = []
+    for product in PALMS_PRODUCTS.keys():
+        if product.lower() in response_lower:
+            mentioned_products.append(product)
+    
+    for product in mentioned_products:
+        if product.lower() not in context_lower:
+            return False, None
+    
+    # If valid, return cleaned response
+    return True, response
 
 def get_chat_response(user_input, extra_context=''):
-    """Main chat response function"""
+    """Main chat response function with enhanced context handling and validation"""
     try:
         # Detect greetings and demo requests first
         greetings = ["hello", "hi", "hey", "greetings", "good morning", "good afternoon", "good evening"]
         is_greeting = any(greet in user_input.lower() for greet in greetings)
         wants_demo = detect_demo_request(user_input)
-        wants_info_form = should_show_inline_form(user_input)
 
         # Handle greetings
         if is_greeting:
             return {
-                'response': "Hello! I'm here to help you learn about PALMS™ Warehouse Management System. How can I assist you today?",
+                'response': "Welcome to PALMS™, your warehouse management expert. What specific challenges can I help you address?",
                 'show_demo_popup': False,
-                'show_options': False,
-                'show_info_form': False
+                'show_options': False
             }
         
         # Handle demo requests
         if wants_demo:
             return {
-                'response': "I'd be happy to show you a demo of PALMS™! Our warehouse management system can really transform your operations. Please fill out the form below and we'll get you set up with a personalized demonstration.",
+                'response': "I'll arrange a personalized demo of PALMS™ for your warehouse needs. Please fill out this quick form to proceed.",
                 'show_demo_popup': True,
-                'show_options': False,
-                'show_info_form': False
+                'show_options': False
+            }
+        
+        # Check if query is too complex or requires detailed explanation
+        complex_keywords = ['how', 'explain', 'details', 'features', 'benefits', 'compare', 'difference', 'pricing', 'cost']
+        is_complex_query = any(keyword in user_input.lower() for keyword in complex_keywords)
+        
+        if is_complex_query:
+            return {
+                'response': "Your question requires a detailed explanation of our solutions. Would you like to schedule a demo for a comprehensive overview?",
+                'show_demo_popup': True,
+                'show_options': False
             }
         
         # Get relevant content from WordPress
-        retrieved_content = retrieve(user_input, n_results=3)
+        retrieved_content = retrieve(user_input, n_results=5)  # Get more results for better context
         
-        # Build context for AI
-        context = "\n\n".join(retrieved_content) if retrieved_content else "General information about PALMS™ Warehouse Management System."
+        # Enhance context with product information
+        product_context = []
+        user_input_lower = user_input.lower()
         
-        # Create the prompt for OpenAI
+        # Add relevant product info based on user query
+        if any(word in user_input_lower for word in ['product', 'offer', 'solution', 'service']):
+            product_context.append("PALMS™ Product Line:\n" + "\n".join([f"- {name}: {desc}" for name, desc in PALMS_PRODUCTS.items()]))
+        
+        # Combine and filter context
+        all_context = product_context + (retrieved_content if retrieved_content else ["Basic PALMS™ WMS information"])
+        context = "\n\n".join(all_context)
+        
+        # Create the prompt with strict guidelines
         messages = [
             {"role": "system", "content": SYSTEM_PERSONA},
             {"role": "user", "content": f"""
-Context from OnPalms website:
+Context (ONLY use this information - do not make up additional details):
 {context}
 
 User question: {user_input}
 
-Please answer based on the context provided. Keep it conversational and helpful.
+Requirements:
+1. ONLY use information from the context above
+2. Keep response short and simple
+3. If information isn't in context, say you'll need to check
+4. Use bullet points for lists
+5. End with a relevant question
+
+Remember: It's better to admit you need to check something than to make up information!
 """}
         ]
         
-        # Get response from OpenAI
+        # Get response from OpenAI with stricter temperature
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=messages,
             max_tokens=200,
-            temperature=0.7
+            temperature=0.5  # Lower temperature for more focused responses
         )
         
         answer = response.choices[0].message.content.strip()
         
+        # Validate response
+        is_valid, cleaned_response = validate_response(answer, context)
+        
+        if not is_valid:
+            # If invalid, generate a safe fallback response
+            fallback = "Let me focus on what I know about PALMS™ products. Here are our core solutions:\n"
+            fallback += "• PALMS™ WMS: Our main warehouse management system\n"
+            fallback += "• PALMS™ Analytics: Real-time business intelligence\n"
+            fallback += "Which would you like to know more about?"
+            return {
+                'response': fallback,
+                'show_demo_popup': False,
+                'show_options': True
+            }
+        
         return {
-            'response': answer,
+            'response': cleaned_response,
             'show_demo_popup': False,
-            'show_options': True,
-            'show_info_form': wants_info_form
+            'show_options': True
         }
         
     except Exception as e:
@@ -203,10 +284,9 @@ Please answer based on the context provided. Keep it conversational and helpful.
         
         # Fallback response
         return {
-            'response': "I'm experiencing a technical difficulty right now. PALMS™ is a comprehensive warehouse management system that helps businesses optimize their operations. Would you like to know more about our features?",
+            'response': "I'm having trouble accessing my knowledge base. Here's what I definitely know about PALMS™:\n• We offer warehouse management solutions\n• Our system helps optimize operations\nWould you like to know about any specific feature?",
             'show_demo_popup': False,
-            'show_options': False,
-            'show_info_form': False
+            'show_options': False
         }
 
 if __name__ == "__main__":
