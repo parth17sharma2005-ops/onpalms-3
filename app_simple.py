@@ -1,4 +1,10 @@
-from flask import Flask, request, jsonify
+from flask im# Enable CORS for specific domains
+CORS(app, 
+     origins=["https://smartwms.onpalms.com", "http://localhost:3000", "http://127.0.0.1:8080"], 
+     allow_headers=["Content-Type", "Authorization", "X-Requested-With", "X-Session-Id"], 
+     methods=["GET", "POST", "OPTIONS"],
+     supports_credentials=True,
+     allow_credentials=True)lask, request, jsonify
 from flask_cors import CORS
 import traceback
 import os
@@ -14,7 +20,7 @@ app = Flask(__name__)
 # Enable CORS for all domains
 CORS(app, 
      origins=["*"], 
-     allow_headers=["Content-Type", "Authorization", "X-Requested-With"], 
+     allow_headers=["Content-Type", "Authorization", "X-Requested-With", "X-Session-Id"], 
      methods=["GET", "POST", "OPTIONS"],
      supports_credentials=True)
 
