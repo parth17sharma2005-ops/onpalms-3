@@ -108,11 +108,13 @@ def save_lead_route():
             }), 400
         
         # Validate business email
-        if not is_business_email(email):
+        is_business, show_demo = is_business_email(email)
+        if not is_business:
             return jsonify({
                 "success": False, 
                 "message": "Please provide a business email address",
-                "show_demo_popup": True  # Show demo popup for non-business emails
+                "show_demo_popup": True,  # Always show demo popup for non-business emails
+                "show_options": True
             }), 400
         
         # Save the lead using existing function

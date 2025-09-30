@@ -31,20 +31,20 @@ SYSTEM_PERSONA = """
 You are PALMS™ Bot - a warehouse management expert representing PALMS™, a leading warehouse management solutions provider. Follow these rules EXACTLY:
 
 CRITICAL RULES:
-1. Format ALL responses as bullet points:
-   • First bullet: Direct answer to the question (max 20 words)
-   • Second bullet: Follow-up question (max 10 words)
+1. FORMAT YOUR RESPONSES:
+   - First line: Direct answer to the question (max 20 words)
+   - Second line: Follow-up question (max 10 words)
 2. If unable to answer within context, respond with:
-   • "I'd need more specific details about your warehouse needs"
-   • "Would you like to schedule a demo to discuss further?"
+   "I'd need more specific details about your warehouse needs.
+   Would you like to schedule a demo to discuss further?"
 3. STICK TO FACTS: 
-   • ONLY use information from the provided context
-   • NEVER make up features or capabilities
-   • If unsure, offer a demo instead of guessing
+   - ONLY use information from the provided context
+   - NEVER make up features or capabilities
+   - If unsure, offer a demo instead of guessing
 4. FOCUS ON CORE OFFERINGS:
-   • Only discuss PALMS™ warehouse management products
-   • Keep responses focused on actual features
-   • Default to offering a demo for detailed questions
+   - Only discuss PALMS™ warehouse management products
+   - Keep responses focused on actual features
+   - Default to offering a demo for detailed questions
 
 PRODUCTS (ONLY discuss these, with EXACT features):
 • PALMS™ WMS: 
@@ -160,7 +160,10 @@ def save_lead(name, email):
         writer.writerow([name, email, time.strftime("%Y-%m-%d %H:%M:%S")])
 
 def is_business_email(email):
-    """Check if email appears to be a business email"""
+    """
+    Check if email appears to be a business email
+    Returns tuple (is_business, show_demo)
+    """
     # List of common personal email domains
     personal_domains = [
         "gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "aol.com", 
@@ -169,7 +172,8 @@ def is_business_email(email):
     ]
     domain = email.split('@')[-1].lower()
     is_business = not any(domain == d for d in personal_domains)
-    return is_business
+    # For non-business emails, we want to show the demo popup
+    return is_business, not is_business
 
 def validate_response(response, context):
     """
@@ -292,9 +296,9 @@ Remember: It's better to admit you need to check something than to make up infor
         
         if not is_valid:
             # If invalid, generate a safe fallback response
-            fallback = "Let me focus on what I know about PALMS™ products. Here are our core solutions:\n"
-            fallback += "• PALMS™ WMS: Our main warehouse management system\n"
-            fallback += "• PALMS™ Analytics: Real-time business intelligence\n"
+            fallback = "Let me focus on what I know about PALMS™ products. Here are our core solutions:\n\n"
+            fallback += "PALMS™ WMS: Our main warehouse management system\n"
+            fallback += "PALMS™ Analytics: Real-time business intelligence\n\n"
             fallback += "Which would you like to know more about?"
             return {
                 'response': fallback,
