@@ -484,8 +484,8 @@ if __name__ == "__main__":
     
     if debug:
         logger.info("Running in development mode")
-        app.run(debug=True, host="127.0.0.1", port=8000)
+        app.run(debug=True, host="127.0.0.1", port=8080)
     else:
         logger.info("Running in production mode")
         # Use gunicorn in production
-        app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
+        app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))

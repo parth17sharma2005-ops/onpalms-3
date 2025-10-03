@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PALMS Chatbot Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <h1>PALMS Chatbot Test Page</h1>
+    <p>This is a test page for the PALMS enhanced chatbot.</p>
+
+    <!-- Include the chatbot code -->
+    <?php if (!wp_is_mobile() || true) { // Show on all devices ?>
+
+    <style>
+    /* Demo Form Styles */
+    .palms-demo-form {
+        background: white !important;
+        padding: 16px !important;
+        border-radius: 8px !important;
+        margin: 8px 0 !important;
+        border: 1px solid #E1E4E8 !important;
+    }
+    
+    .palms-demo-form input {
+        width: 100% !important;
+        padding: 8px 12px !important;
+        margin: 4px 0 12px !important;
+        border: 1px solid #E1E4E8 !important;
+        border-radius: 4px !important;
+        font-size: 14px !important;
+    }
+    
+    .palms-demo-form button {
+        background: #2F5D50 !important;
+        color: white !important;
+        border: none !important;
+        padding: 8px 16px !important;
+        border-radius: 4px !important;
+        cursor: pointer !important;
+        font-size: 14px !important;
+        width: 100% !important;
+    }
+    
+    .palms-demo-form button:hover {
+        background: #3A80BA !important;
+    }
+    
+    /* PALMS Enhanced Chatbot - Production CSS */
+    #palms-enhanced-chatbot * {
+        box-sizing: border-box !important;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    }
+
+    #palms-enhanced-chatbot {
+        position: fixed !important;
+        bottom: 24px !important;
+        right: 24px !important;
+        z-index: 999999 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+    }
+
+    /* Minimized state */
+    #palms-enhanced-chatbot.minimized {
+        width: 64px !important;
+        height: 64px !important;
+        border-radius: 50% !important;
+        background: #2F5D50 !important;
+        cursor: pointer !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    #palms-enhanced-chatbot.minimized:hover {
+        transform: scale(1.05) !important;
+        box-shadow: 0 8px 25px rgba(47, 93, 80, 0.3) !important;
+        transition: transform 0.2s, box-shadow 0.2s !important;
+    }
+
+    /* Header */
+    .palms-header {
+        background: linear-gradient(135deg, #2F5D50 0%, #3A80BA 100%) !important;
+        color: #fff !important;
+        padding: 16px 20px !important;
+        border-radius: 12px 12px 0 0 !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        font-weight: 600 !important;
+        font-size: 1.1rem !important;
+    }
+
+    .palms-minimize-btn {
+        background: transparent !important;
+        border: none !important;
+        color: #fff !important;
+        cursor: pointer !important;
+        padding: 4px !important;
+        border-radius: 4px !important;
+        width: 24px !important;
+        height: 24px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: background 0.2s !important;
+    }
+
+    .palms-minimize-btn:hover {
+        background: rgba(255,255,255,0.1) !important;
+    }
+
+    /* Chat icon */
+    .palms-chat-icon {
+        cursor: pointer !important;
+        display: none !important;
+    }
+
+    #palms-enhanced-chatbot.minimized .palms-chat-icon {
+        display: flex !important;
+    }
+
+    #palms-enhanced-chatbot.minimized .palms-header {
+        display: none !important;
+    }
+
+    /* Body */
+    .palms-body {
+        flex: 1 !important;
+        padding: 16px !important;
+        overflow-y: auto !important;
+        height: 400px !important;
+        max-height: 400px !important;
+        min-height: 400px !important;
+        background: #FAFBFC !important;
+    }
+
+    /* Messages */
+    .palms-message {
+        margin-bottom: 12px !important;
+        padding: 12px 16px !important;
+        border-radius: 18px !important;
+        max-width: 85% !important;
+        word-wrap: break-word !important;
+        font-size: 0.95rem !important;
+        line-height: 1.4 !important;
+        display: inline-block !important;
+        clear: both !important;
+    }
+
+    .palms-message.user {
+        background: #F2F4F6 !important;
+        color: #1E1E1E !important;
+        float: right !important;
+        border-bottom-right-radius: 6px !important;
+    }
+
+    .palms-message.bot {
+        background: #2F5D50 !important;
+        color: #fff !important;
+        float: left !important;
+        border-bottom-left-radius: 6px !important;
+    }
+
+    .palms-message.system {
+        background: #E3F2FD !important;
+        color: #1565C0 !important;
+        float: left !important;
+        border: 1px solid #BBDEFB !important;
+        font-size: 0.9rem !important;
+    }
+
+    /* Hidden states */
+    .palms-hidden {
+        display: none !important;
+    }
+    </style>
+
+    <div id="palms-enhanced-chatbot" class="minimized">
+        <div class="palms-header">
+            <span>PALMS Assistant</span>
+            <button class="palms-minimize-btn" onclick="palmsMinimize()">
+                <svg viewBox="0 0 20 20" fill="currentColor" style="width:16px;height:16px;">
+                    <rect x="4" y="9" width="12" height="2" rx="1" fill="currentColor"/>
+                </svg>
+            </button>
+        </div>
+        
+        <div class="palms-chat-icon" onclick="palmsMaximize()" style="width:64px;height:64px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:8px;box-sizing:border-box;border:3px solid #2F5D50;">
+            <img src="https://smartwms.onpalms.com/wp-content/uploads/2025/09/palmslogo.png" alt="PALMS Logo" style="width:48px;height:48px;object-fit:contain;border-radius:4px;" />
+        </div>
+        
+        <div class="palms-body palms-hidden"></div>
+        
+        <form class="palms-input-form palms-hidden" onsubmit="palmsSendMessage(event)">
+            <div class="palms-input-row">
+                <input type="text" class="palms-input" placeholder="Ask about PALMS™..." autocomplete="off" />
+                <button type="submit" class="palms-send-btn">➤</button>
+            </div>
+            <div class="palms-disclaimer">Powered by PALMS™ AI Assistant</div>
+        </form>
+    </div>
+
+    <script>
+    // PALMS Enhanced Chatbot JavaScript - Production Version
+    (function() {
+        let minimized = true;
+        let hasAutoOpened = false;
+        let sessionId = null;
+        
+        const widget = document.getElementById('palms-enhanced-chatbot');
+        const body = widget.querySelector('.palms-body');
+        const form = widget.querySelector('.palms-input-form');
+        const input = widget.querySelector('.palms-input');
+        
+        // Production API Configuration
+        const API_URL = 'http://127.0.0.1:8080';  // Use localhost for testing
+        
+        // Generate session ID
+        function generateSessionId() {
+            return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+        
+        // Initialize session
+        sessionId = generateSessionId();
+        
+        window.palmsMinimize = function() {
+            minimized = true;
+            widget.classList.add('minimized');
+            body.classList.add('palms-hidden');
+            form.classList.add('palms-hidden');
+        };
+        
+        window.palmsMaximize = function() {
+            minimized = false;
+            widget.classList.remove('minimized');
+            body.classList.remove('palms-hidden');
+            form.classList.remove('palms-hidden');
+            
+            // Add welcome message if first time
+            if (body.children.length === 0) {
+                setTimeout(() => {
+                    palmsAddMessage("Hi! I'm your PALMS™ assistant. How can I help you optimize your warehouse operations today?", false);
+                }, 400);
+            }
+            
+            // Focus input
+            setTimeout(() => input.focus(), 500);
+        };
+        
+        function palmsAddMessage(text, isUser = false) {
+            const msg = document.createElement('div');
+            msg.className = 'palms-message ' + (isUser ? 'user' : 'bot');
+            msg.textContent = text;
+            body.appendChild(msg);
+            body.scrollTop = body.scrollHeight;
+        }
+        
+        function palmsAddTyping() {
+            const msg = document.createElement('div');
+            msg.className = 'palms-message typing bot';
+            msg.innerHTML = '<span>...</span>';
+            body.appendChild(msg);
+            body.scrollTop = body.scrollHeight;
+            return msg;
+        }
+        
+        function palmsRemoveTyping() {
+            const typing = body.querySelector('.palms-message.typing');
+            if (typing) typing.remove();
+        }
+        
+        window.palmsSendMessage = async function(event) {
+            event.preventDefault();
+            
+            const message = input.value.trim();
+            if (!message) return;
+            
+            palmsAddMessage(message, true);
+            input.value = '';
+            
+            const typing = palmsAddTyping();
+            
+            try {
+                const response = await fetch(`${API_URL}/chat`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Session-Id': sessionId,
+                        'Accept': 'application/json'
+                    },
+                    mode: 'cors',
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ message })
+                });
+                
+                const data = await response.json();
+                palmsRemoveTyping();
+                
+                if (data.error) {
+                    palmsAddMessage(data.error, false);
+                    return;
+                }
+                
+                if (typeof data === 'string') {
+                    palmsAddMessage(data, false);
+                } else if (data.response) {
+                    palmsAddMessage(data.response, false);
+                    
+                    // Handle demo popup
+                    if (data.show_demo_popup) {
+                        const demoForm = document.createElement('div');
+                        demoForm.className = 'palms-message bot palms-demo-form';
+                        demoForm.innerHTML = `
+                            <form onsubmit="palmsSubmitDemo(event)">
+                                <input type="text" placeholder="Your Name" required name="name">
+                                <input type="email" placeholder="Business Email" required name="email">
+                                <button type="submit">Schedule Demo</button>
+                            </form>
+                        `;
+                        body.appendChild(demoForm);
+                        body.scrollTop = body.scrollHeight;
+                    }
+                } else {
+                    palmsAddMessage("I encountered an unexpected response. Please try again.", false);
+                }
+                
+            } catch (err) {
+                console.error('Chat error:', err);
+                palmsRemoveTyping();
+                palmsAddMessage("I'm having trouble connecting. Please try again in a moment.", false);
+            }
+            
+            // Refocus input
+            setTimeout(() => input.focus(), 100);
+        };
+        
+        // Handle enter key in input
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                palmsSendMessage(e);
+            }
+        });
+        
+        // Handle demo form submission
+        window.palmsSubmitDemo = async function(event) {
+            event.preventDefault();
+            const form = event.target;
+            const name = form.name.value.trim();
+            const email = form.email.value.trim();
+            
+            try {
+                const response = await fetch(`${API_URL}/save_lead`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Session-Id': sessionId
+                    },
+                    body: JSON.stringify({ name, email })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    palmsAddMessage("Thanks for your interest! Our team will contact you shortly to schedule your demo.", false);
+                    form.parentElement.remove(); // Remove the form
+                } else {
+                    palmsAddMessage(data.message || "Sorry, there was an error. Please try again.", false);
+                }
+            } catch (err) {
+                console.error('Demo submission error:', err);
+                palmsAddMessage("Sorry, there was an error submitting your demo request. Please try again.", false);
+            }
+        };
+        
+        // Initialize chatbot
+        initializeChatbot();
+        
+        function initializeChatbot() {
+            palmsMinimize();
+            
+            // Auto-open after 3 seconds
+            setTimeout(() => {
+                if (!hasAutoOpened) {
+                    hasAutoOpened = true;
+                    palmsMaximize();
+                }
+            }, 3000);
+        }
+    })();
+    </script>
+
+    <?php } ?>
+
+</body>
+</html>

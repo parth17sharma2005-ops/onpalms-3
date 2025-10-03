@@ -175,41 +175,57 @@ def is_business_email(email):
     # For non-business emails, we want to show the demo popup
     return is_business, not is_business
 
-def validate_response(response, context):
-    """
-    Validates bot response against known context to prevent hallucination
-    Returns (is_valid, cleaned_response)
-    """
-    response_lower = response.lower()
-    context_lower = context.lower()
+def generate_product_context(user_input):
+    """Generate relevant product context based on user input"""
+    context_parts = []
     
-    # Check for obvious hallucination indicators
-    hallucination_phrases = [
-        "consignment inventory",
-        "pay upfront",
-        "supplier owns",
-        "small budget",
-        "store",
-        "retail",
-        "items don't sell"
-    ]
+    # Always include base product information
+    context_parts.append("PALMS™ Product Information:")
+    for name, desc in PALMS_PRODUCTS.items():
+        context_parts.append(f"{name}: {desc}")
     
-    for phrase in hallucination_phrases:
-        if phrase in response_lower and phrase not in context_lower:
-            return False, None
+    # Add detailed features for relevant queries
+    user_input_lower = user_input.lower()
+    if any(word in user_input_lower for word in ['product', 'offer', 'solution', 'service', 'feature', 'capability']):
+        features = {
+            "WMS": [
+                "Real-time inventory tracking",
+                "Automated order processing",
+                "Warehouse space optimization",
+                "Stock movement tracking"
+            ],
+            "3PL": [
+                "Multi-warehouse management",
+                "Client portal access",
+                "Billing automation",
+                "Resource allocation"
+            ],
+            "Analytics": [
+                "Performance metrics",
+                "Custom reporting",
+                "Real-time dashboards",
+                "Trend analysis"
+            ],
+            "Mobile": [
+                "Barcode scanning",
+                "Mobile picking",
+                "Real-time updates",
+                "Worker tracking"
+            ],
+            "Enterprise": [
+                "Multi-site management",
+                "Advanced integrations",
+                "Custom workflows",
+                "Enterprise scaling"
+            ]
+        }
+        
+        for name, product_features in features.items():
+            if name.lower() in user_input_lower or any(f.lower() in user_input_lower for f in product_features):
+                context_parts.append(f"\nPALMS™ {name} Features:")
+                context_parts.extend([f"- {feature}" for feature in product_features])
     
-    # Ensure response only mentions products we actually have
-    mentioned_products = []
-    for product in PALMS_PRODUCTS.keys():
-        if product.lower() in response_lower:
-            mentioned_products.append(product)
-    
-    for product in mentioned_products:
-        if product.lower() not in context_lower:
-            return False, None
-    
-    # If valid, return cleaned response
-    return True, response
+    return "\n".join(context_parts)
 
 def get_chat_response(user_input, extra_context=''):
     """Main chat response function with enhanced context handling and validation"""
@@ -280,47 +296,40 @@ def get_chat_response(user_input, extra_context=''):
         context = "\n\n".join(context_parts)
         print(f"📝 Final context length: {len(context)} characters")
         
-        # Create the prompt with strict guidelines
+        # Generate context based on user input
+        context = generate_product_context(user_input)
+        print(f"📝 Generated context length: {len(context)} characters")
+        
+        # Create the prompt with simplified guidelines
         messages = [
             {"role": "system", "content": SYSTEM_PERSONA},
             {"role": "user", "content": f"""
-Context (ONLY use this information - do not make up additional details):
+Context:
 {context}
 
 User question: {user_input}
 
 Requirements:
-1. ONLY use information from the context above
-2. Keep response short and simple
-3. If information isn't in context, say you'll need to check
-4. Use bullet points for lists
-5. End with a relevant question
-
-Remember: It's better to admit you need to check something than to make up information!
+1. Answer directly using the context provided
+2. Keep responses short and focused
+3. End with a relevant follow-up question
 """}
         ]
         
-        # Get response from OpenAI with GPT-4
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=messages,
-            max_tokens=200,
-            temperature=0.5  # Lower temperature for more focused responses
-        )
-        
-        answer = response.choices[0].message.content.strip()
-        
-        # Validate response
-        is_valid, cleaned_response = validate_response(answer, context)
-        
-        if not is_valid:
-            # If invalid, generate a safe fallback response
-            fallback = "Let me focus on what I know about PALMS™ products. Here are our core solutions:\n\n"
-            fallback += "PALMS™ WMS: Our main warehouse management system\n"
-            fallback += "PALMS™ Analytics: Real-time business intelligence\n\n"
-            fallback += "Which would you like to know more about?"
+        # Get response from OpenAI
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-4-0125-preview",
+                messages=messages,
+                max_tokens=200,
+                temperature=0.7
+            )
+            
+            answer = response.choices[0].message.content.strip()
+            print(f"📝 AI response: {answer[:100]}...")
+            
             return {
-                'response': fallback,
+                'response': answer,
                 'show_demo_popup': False,
                 'show_options': True
             }
@@ -365,12 +374,30 @@ Remember: It's better to admit you need to check something than to make up infor
                 'show_options': False
             }
         else:
-            # General fallback for unknown errors
-            return {
-                'response': "Let me tell you what I know about PALMS™:\n\nWe specialize in warehouse management solutions that optimize operations.\n\nWhat specific aspect would you like to learn more about?",
-                'show_demo_popup': False,
-                'show_options': True
-            }
+            error_type = type(e).__name__
+            print(f"⚠️ Unhandled error type: {error_type}")
+            
+            # More specific error messages based on error type
+            if "Context" in str(e) or "content" in str(e).lower():
+                return {
+                    'response': "I'm having trouble processing the product information. Could you please ask about a specific PALMS™ feature or product?",
+                    'show_demo_popup': False,
+                    'show_options': True
+                }
+            elif "rate" in str(e).lower() or "limit" in str(e).lower():
+                return {
+                    'response': "Our system is experiencing high demand. Please try again in a moment.",
+                    'show_demo_popup': False,
+                    'show_options': False
+                }
+            else:
+                # More informative general fallback
+                top_product = next(iter(PALMS_PRODUCTS.items()))
+                return {
+                    'response': f"While I'm addressing your question, let me tell you about our flagship product:\n\nPALMS™ {top_product[0]}: {top_product[1]}\n\nWould you like to know more about this or our other solutions?",
+                    'show_demo_popup': False,
+                    'show_options': True
+                }
 
 if __name__ == "__main__":
     # Test the chat system

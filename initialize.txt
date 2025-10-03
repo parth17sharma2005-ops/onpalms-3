@@ -1,0 +1,14 @@
+There are files in this folder, from an old project that I scrapped. I am building
+a new one, fresh. The main logic is using RAG, first chunk and embed data from the
+word press URL 
+https://www.onpalms.com/wp-json/wp/v2/pages?per_page=100
+https://www.onpalms.com/wp-json/wp/v2/posts?per_page=100,
+ and then 
+retrieve the data so my bot learns about the website. the bot is basically to help website
+users get to know the company better and take their info "name and business mail".
+I am building this project for easier deployment. I have AWS membership. 
+I want the name and business mail to be stored either in a database, or a 
+google sheet for easy access. Main function is to take data. the footer.php file is
+where the chatbot's frontend is at. it is a popup, at the bottom right corner of the 
+website. lets build and deploy this project, so i can paste the API url in footer.php
+and make the bot complete. the frontend is currently deployed. but the backend isnt deployed yet.

@@ -1,7 +1,10 @@
 <?php
 /**
- * Enhanced PALMS Chatbot with Inline Forms
- * Features: Conversational AI, Inline Forms, Business Email Validation
+ * The template for displaying the footer.
+ *
+ * Contains the body & html closing tags.
+ *
+ * @package HelloElementor
  */
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
@@ -19,17 +22,27 @@ if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_
 ?>
 
 <?php wp_footer(); ?>
-<!-- PALMS Enhanced Chatbot - Direct Theme Integration -->
+<!-- PALMS Chatbot - Direct Theme Integration -->
 <?php if (!wp_is_mobile() || true) { // Show on all devices ?>
+<!-- PALMS Chatbot Widget - Standalone HTML -->
+<!-- Add this code anywhere in your WordPress site (footer.php, custom HTML widget, etc.) -->
+<script>
+// WordPress AJAX configuration for PALMS chatbot
+window.palmsConfig = {
+    ajaxUrl: '<?php echo admin_url('admin-ajax.php'); ?>',
+    nonce: '<?php echo wp_create_nonce('palms_chat_nonce'); ?>',
+    apiUrl: 'https://scabberslosttoe.pythonanywhere.com'
+};
+</script>
 
 <style>
-/* PALMS Enhanced Chatbot - Standalone CSS */
-#palms-enhanced-chatbot * {
+/* PALMS Chatbot - Standalone CSS - No WordPress conflicts */
+#palms-standalone-chatbot * {
     box-sizing: border-box !important;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
 
-#palms-enhanced-chatbot {
+#palms-standalone-chatbot {
     position: fixed !important;
     bottom: 24px !important;
     right: 24px !important;
@@ -38,10 +51,11 @@ if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_
     flex-direction: column !important;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
     transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+    /* Size and styling will be controlled by JavaScript */
 }
 
 /* Minimized state */
-#palms-enhanced-chatbot.minimized {
+#palms-standalone-chatbot.minimized {
     width: 64px !important;
     height: 64px !important;
     border-radius: 50% !important;
@@ -51,7 +65,7 @@ if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_
     justify-content: center !important;
 }
 
-#palms-enhanced-chatbot.minimized:hover {
+#palms-standalone-chatbot.minimized:hover {
     transform: scale(1.05) !important;
     box-shadow: 0 8px 25px rgba(47, 93, 80, 0.3) !important;
     transition: transform 0.2s, box-shadow 0.2s !important;
@@ -95,15 +109,15 @@ if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_
     display: none !important;
 }
 
-#palms-enhanced-chatbot.minimized .palms-chat-icon {
+#palms-standalone-chatbot.minimized .palms-chat-icon {
     display: flex !important;
 }
 
-#palms-enhanced-chatbot.minimized .palms-header {
+#palms-standalone-chatbot.minimized .palms-header {
     display: none !important;
 }
 
-/* Body */
+/* Body - FIXED HEIGHT */
 .palms-body {
     flex: 1 !important;
     padding: 16px !important;
@@ -114,14 +128,20 @@ if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_
     background: #FAFBFC !important;
 }
 
+.palms-body::after {
+    content: "" !important;
+    display: table !important;
+    clear: both !important;
+}
+
 /* Messages */
 .palms-message {
     margin-bottom: 12px !important;
     padding: 12px 16px !important;
     border-radius: 18px !important;
-    max-width: 85% !important;
+    max-width: 80% !important;
     word-wrap: break-word !important;
-    font-size: 0.95rem !important;
+    font-size: 1rem !important;
     line-height: 1.4 !important;
     display: inline-block !important;
     clear: both !important;
@@ -139,138 +159,6 @@ if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_
     color: #fff !important;
     float: left !important;
     border-bottom-left-radius: 6px !important;
-}
-
-.palms-message.system {
-    background: #E3F2FD !important;
-    color: #1565C0 !important;
-    float: left !important;
-    border: 1px solid #BBDEFB !important;
-    font-size: 0.9rem !important;
-}
-
-/* Demo Form Styles */
-.palms-demo-form {
-    background: white !important;
-    padding: 20px !important;
-    border-radius: 12px !important;
-    margin: 12px 0 !important;
-    border: 2px solid #E1E4E8 !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
-    clear: both !important;
-    width: 90% !important;
-    margin-left: 5% !important;
-}
-
-.palms-demo-form h4 {
-    color: #2F5D50 !important;
-    margin: 0 0 16px !important;
-    font-size: 1rem !important;
-    text-align: center !important;
-}
-
-.palms-demo-form input {
-    width: 100% !important;
-    padding: 10px 12px !important;
-    margin: 4px 0 12px !important;
-    border: 2px solid #E1E4E8 !important;
-    border-radius: 8px !important;
-    font-size: 0.9rem !important;
-    transition: border-color 0.2s !important;
-}
-
-.palms-demo-form input:focus {
-    border-color: #3A80BA !important;
-    outline: none !important;
-}
-
-.palms-demo-form button {
-    width: 100% !important;
-    background: #2F5D50 !important;
-    color: white !important;
-    border: none !important;
-    padding: 12px !important;
-    border-radius: 8px !important;
-    cursor: pointer !important;
-    font-size: 0.9rem !important;
-    font-weight: 600 !important;
-    transition: background-color 0.2s !important;
-}
-
-.palms-demo-form button:hover {
-    background: #3A80BA !important;
-}
-
-/* Inline Form Styles */
-.palms-inline-form {
-    background: #FFFFFF !important;
-    border: 2px solid #E0E7FF !important;
-    border-radius: 12px !important;
-    padding: 16px !important;
-    margin: 12px 0 !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
-    clear: both !important;
-    width: 100% !important;
-}
-
-.palms-form-title {
-    font-size: 0.9rem !important;
-    font-weight: 600 !important;
-    color: #2F5D50 !important;
-    margin-bottom: 12px !important;
-    text-align: center !important;
-}
-
-.palms-form-row {
-    margin-bottom: 12px !important;
-}
-
-.palms-form-input {
-    width: 100% !important;
-    padding: 10px 12px !important;
-    border: 2px solid #E5E7EB !important;
-    border-radius: 8px !important;
-    font-size: 0.9rem !important;
-    background: #FFFFFF !important;
-    color: #1F2937 !important;
-    outline: none !important;
-    transition: border-color 0.2s !important;
-}
-
-.palms-form-input:focus {
-    border-color: #3A80BA !important;
-    box-shadow: 0 0 0 3px rgba(58, 128, 186, 0.1) !important;
-}
-
-.palms-form-input::placeholder {
-    color: #9CA3AF !important;
-}
-
-.palms-form-submit {
-    width: 100% !important;
-    padding: 12px !important;
-    background: #3A80BA !important;
-    color: #FFFFFF !important;
-    border: none !important;
-    border-radius: 8px !important;
-    font-size: 0.9rem !important;
-    font-weight: 600 !important;
-    cursor: pointer !important;
-    transition: background 0.2s !important;
-}
-
-.palms-form-submit:hover {
-    background: #2F5D50 !important;
-}
-
-.palms-form-error {
-    background: #FEF2F2 !important;
-    color: #DC2626 !important;
-    padding: 8px 12px !important;
-    border-radius: 6px !important;
-    font-size: 0.85rem !important;
-    margin-top: 8px !important;
-    border-left: 4px solid #DC2626 !important;
 }
 
 /* Typing animation */
@@ -323,7 +211,7 @@ if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_
     padding: 12px 16px !important;
     border: 1px solid #D9DEE2 !important;
     border-radius: 24px !important;
-    font-size: 0.95rem !important;
+    font-size: 1rem !important;
     background: #fff !important;
     color: #1E1E1E !important;
     outline: none !important;
@@ -358,7 +246,7 @@ if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_
 .palms-disclaimer {
     margin: 0 !important;
     padding: 8px 12px !important;
-    font-size: 0.8rem !important;
+    font-size: 0.85rem !important;
     color: #6E7B85 !important;
     text-align: center !important;
     line-height: 1.2 !important;
@@ -370,7 +258,7 @@ if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_
 }
 </style>
 
-<div id="palms-enhanced-chatbot" class="minimized">
+<div id="palms-standalone-chatbot" class="minimized">
     <div class="palms-header">
         <span>PALMS Assistant</span>
         <button class="palms-minimize-btn" onclick="palmsMinimize()">
@@ -391,27 +279,26 @@ if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_
             <input type="text" class="palms-input" placeholder="Ask about PALMS™..." autocomplete="off" />
             <button type="submit" class="palms-send-btn">➤</button>
         </div>
-        <div class="palms-disclaimer">Powered by PALMS™ AI Assistant</div>
+        <div class="palms-disclaimer">Disclaimer: This chatbot provides information for general purposes only and does not constitute professional advice.</div>
     </form>
 </div>
 
 <script>
-// PALMS Enhanced Chatbot JavaScript
+// PALMS Standalone Chatbot JavaScript
 (function() {
     let minimized = true;
+    let optionsShownOnce = false;
     let hasAutoOpened = false;
     
-    const widget = document.getElementById('palms-enhanced-chatbot');
+    const widget = document.getElementById('palms-standalone-chatbot');
     const body = widget.querySelector('.palms-body');
     const form = widget.querySelector('.palms-input-form');
     const input = widget.querySelector('.palms-input');
     
-    // API Configuration
-    const API_URL = 'https://onpalms-chatbot-api.onrender.com'; // Change this for experimental deployment
-    
     window.palmsMinimize = function() {
         minimized = true;
         
+        // Nuclear CSS override for minimize with smooth transition
         widget.style.cssText = `
             position: fixed !important;
             bottom: 24px !important;
@@ -439,6 +326,7 @@ if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_
     window.palmsMaximize = function() {
         minimized = false;
         
+        // Nuclear CSS override for maximize - FIXED HEIGHT with smooth transition
         widget.style.cssText = `
             position: fixed !important;
             bottom: 24px !important;
@@ -458,6 +346,7 @@ if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_
             transform: scale(1) !important;
         `;
         
+        // Force body to have fixed height with scroll
         if (body) {
             body.style.cssText = `
                 flex: 1 !important;
@@ -476,22 +365,14 @@ if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_
         // Add welcome message if first time
         if (body.children.length === 0) {
             setTimeout(() => {
-                palmsAddMessage("Hi! I'm your PALMS™ assistant. How can I help you optimize your warehouse today?", false);
+                palmsAddMessage("Hello. I am PALMS assistant and here to help you.", false);
             }, 400);
         }
     };
     
-    function palmsAddMessage(text, isUser = false, messageType = 'normal') {
+    function palmsAddMessage(text, isUser = false) {
         const msg = document.createElement('div');
-        let className = 'palms-message ';
-        
-        if (messageType === 'system') {
-            className += 'system';
-        } else {
-            className += isUser ? 'user' : 'bot';
-        }
-        
-        msg.className = className;
+        msg.className = 'palms-message ' + (isUser ? 'user' : 'bot');
         msg.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
         body.appendChild(msg);
         
@@ -502,28 +383,6 @@ if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_
         body.appendChild(clearfix);
         
         body.scrollTop = body.scrollHeight;
-        return msg;
-    }
-    
-    function palmsAddInlineForm() {
-        const formContainer = document.createElement('div');
-        formContainer.className = 'palms-inline-form';
-        formContainer.innerHTML = `
-            <div class="palms-form-title">Please share your details to continue</div>
-            <div class="palms-form-row">
-                <input type="text" class="palms-form-input" name="name" placeholder="Your name" required />
-            </div>
-            <div class="palms-form-row">
-                <input type="email" class="palms-form-input" name="email" placeholder="Your business email" required />
-            </div>
-            <button type="button" class="palms-form-submit" onclick="palmsSubmitInfo(this)">Continue</button>
-            <div class="palms-form-error palms-hidden"></div>
-        `;
-        
-        body.appendChild(formContainer);
-        body.scrollTop = body.scrollHeight;
-        
-        return formContainer;
     }
     
     function palmsAddTyping() {
@@ -540,63 +399,6 @@ if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_
         if (typing) typing.remove();
     }
     
-    window.palmsSubmitInfo = async function(button) {
-        const form = button.closest('.palms-inline-form');
-        const nameInput = form.querySelector('input[name="name"]');
-        const emailInput = form.querySelector('input[name="email"]');
-        const errorDiv = form.querySelector('.palms-form-error');
-        
-        const name = nameInput.value.trim();
-        const email = emailInput.value.trim();
-        
-        // Hide previous errors
-        errorDiv.classList.add('palms-hidden');
-        
-        // Basic validation
-        if (!name || !email) {
-            errorDiv.textContent = 'Please fill in both fields.';
-            errorDiv.classList.remove('palms-hidden');
-            return;
-        }
-        
-        // Disable form during submission
-        button.disabled = true;
-        button.textContent = 'Submitting...';
-        
-        try {
-            const response = await fetch(`${API_URL}/submit_info`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ name, email })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                // Remove the form and show success message
-                form.remove();
-                palmsAddMessage(data.message, false, 'system');
-            } else {
-                // Show error and keep form
-                errorDiv.textContent = data.message;
-                errorDiv.classList.remove('palms-hidden');
-                button.disabled = false;
-                button.textContent = 'Continue';
-                
-                if (!data.show_form_again) {
-                    form.remove();
-                }
-            }
-        } catch (err) {
-            console.error('Info submission error:', err);
-            errorDiv.textContent = 'Connection error. Please try again.';
-            errorDiv.classList.remove('palms-hidden');
-            button.disabled = false;
-            button.textContent = 'Continue';
-        }
-    };
-    
     window.palmsSendMessage = async function(event) {
         event.preventDefault();
         
@@ -609,11 +411,16 @@ if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_
         const typing = palmsAddTyping();
         
         try {
-            const response = await fetch(`${API_URL}/chat`, {
+            const response = await fetch(window.palmsConfig.apiUrl + '/chat', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ message })
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ 
+                    message: message,
+                    _wpnonce: window.palmsConfig.nonce
+                })
             });
             
             const data = await response.json();
@@ -622,32 +429,26 @@ if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_
             const botText = data.response || "Sorry, I couldn't process your request.";
             palmsAddMessage(botText, false);
             
-            // Show inline form if requested
-            if (data.show_info_form) {
-                setTimeout(() => {
-                    palmsAddInlineForm();
-                }, 800);
-            }
-            
         } catch (err) {
             palmsRemoveTyping();
             palmsAddMessage("I'm having trouble connecting. Please try again in a moment.", false);
         }
     };
     
-    // Initialize chatbot
+    // Initialize chatbot after all functions are defined
     function initializeChatbot() {
+        // Set correct initial minimized state
         palmsMinimize();
         
-        // Auto-open after 2.5 seconds on first visit
+        // Auto-open chatbot after 2.5 seconds on first visit
         setTimeout(() => {
             if (!hasAutoOpened && minimized) {
                 hasAutoOpened = true;
                 palmsMaximize();
                 
-                // Auto-minimize after 8 seconds if no interaction
+                // Auto-minimize after 8 seconds if user hasn't interacted
                 setTimeout(() => {
-                    if (body.children.length <= 2) { // Only welcome message
+                    if (!optionsShownOnce && body.children.length <= 2) { // Only welcome message
                         palmsMinimize();
                     }
                 }, 8000);
@@ -660,6 +461,7 @@ if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_
 })();
 </script>
 
+<!-- Copy everything from the standalone file I created -->
 <?php } ?>
 </body>
 </html>

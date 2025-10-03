@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PALMS API Connection Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; font-size: 16px; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <h1>PALMS API Connection Test</h1>
+    
+    <button onclick="testHealth()">Test Health Endpoint</button>
+    <button onclick="testChat()">Test Chat Endpoint</button>
+    <button onclick="testSubmitInfo()">Test Submit Info</button>
+    <button onclick="clearResults()">Clear Results</button>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_URL = 'https://onpalms-2.onrender.com';
+        const sessionId = 'test_session_' + Date.now();
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = message;
+            document.getElementById('results').appendChild(div);
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        async function testHealth() {
+            addResult('Testing health endpoint...', 'info');
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                const data = await response.json();
+                addResult(`✅ Health Check Success: <pre>${JSON.stringify(data, null, 2)}</pre>`, 'success');
+            } catch (err) {
+                addResult(`❌ Health Check Failed: ${err.message}<br><pre>${err.stack}</pre>`, 'error');
+            }
+        }
+        
+        async function testChat() {
+            addResult('Testing chat endpoint...', 'info');
+            try {
+                console.log('Making chat request...');
+                const response = await fetch(`${API_URL}/chat`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Session-Id': sessionId
+                    },
+                    body: JSON.stringify({ message: 'Hello, this is a test' })
+                });
+                
+                console.log('Response received:', response);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                addResult(`✅ Chat Success: <pre>${JSON.stringify(data, null, 2)}</pre>`, 'success');
+            } catch (err) {
+                console.error('Chat error:', err);
+                addResult(`❌ Chat Failed: ${err.message}<br><pre>${err.stack}</pre>`, 'error');
+            }
+        }
+        
+        async function testSubmitInfo() {
+            addResult('Testing submit info endpoint...', 'info');
+            try {
+                const response = await fetch(`${API_URL}/submit_info`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Session-Id': sessionId
+                    },
+                    body: JSON.stringify({ 
+                        name: 'Test User', 
+                        email: 'test@company.com' 
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                addResult(`✅ Submit Info Success: <pre>${JSON.stringify(data, null, 2)}</pre>`, 'success');
+            } catch (err) {
+                addResult(`❌ Submit Info Failed: ${err.message}<br><pre>${err.stack}</pre>`, 'error');
+            }
+        }
+        
+        // Auto-run health check on load
+        window.onload = function() {
+            addResult(`🔍 Testing from: ${window.location.origin}`, 'info');
+            addResult(`🎯 API URL: ${API_URL}`, 'info');
+            addResult(`🆔 Session ID: ${sessionId}`, 'info');
+            testHealth();
+        };
+    </script>
+</body>
+</html>
