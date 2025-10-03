@@ -247,19 +247,38 @@ def get_chat_response(user_input, extra_context=''):
             }
         
         # Get relevant content from WordPress
-        retrieved_content = retrieve(user_input, n_results=5)  # Get more results for better context
+        try:
+            retrieved_content = retrieve(user_input, n_results=5)
+            print(f"📚 Retrieved content length: {len(retrieved_content) if retrieved_content else 0} items")
+        except Exception as retrieve_error:
+            print(f"⚠️ Content retrieval error: {str(retrieve_error)}")
+            retrieved_content = []
         
-        # Enhance context with product information
-        product_context = []
+        # Always include base product information
+        product_context = ["PALMS™ Product Information:"]
+        for name, desc in PALMS_PRODUCTS.items():
+            product_context.append(f"{name}: {desc}")
+        
+        # Add detailed features for relevant queries
         user_input_lower = user_input.lower()
+        if any(word in user_input_lower for word in ['product', 'offer', 'solution', 'service', 'feature', 'capability']):
+            for name, features in {
+                "WMS": ["Real-time inventory tracking", "Automated order processing", "Warehouse optimization"],
+                "3PL": ["Multi-warehouse management", "Client portal", "Billing automation"],
+                "Analytics": ["Performance metrics", "Custom reporting", "Real-time dashboards"],
+                "Mobile": ["Barcode scanning", "Mobile picking", "Real-time updates"],
+                "Enterprise": ["Multi-site management", "Advanced integrations", "Custom workflows"]
+            }.items():
+                product_context.append(f"\nPALMS™ {name} Features:")
+                product_context.extend([f"- {feature}" for feature in features])
         
-        # Add relevant product info based on user query
-        if any(word in user_input_lower for word in ['product', 'offer', 'solution', 'service']):
-            product_context.append("PALMS™ Product Line:\n" + "\n".join([f"- {name}: {desc}" for name, desc in PALMS_PRODUCTS.items()]))
+        # Combine contexts with proper formatting
+        context_parts = ["\n".join(product_context)]
+        if retrieved_content:
+            context_parts.append("\nAdditional Information:\n" + "\n".join(retrieved_content))
         
-        # Combine and filter context
-        all_context = product_context + (retrieved_content if retrieved_content else ["Basic PALMS™ WMS information"])
-        context = "\n\n".join(all_context)
+        context = "\n\n".join(context_parts)
+        print(f"📝 Final context length: {len(context)} characters")
         
         # Create the prompt with strict guidelines
         messages = [
@@ -313,15 +332,45 @@ Remember: It's better to admit you need to check something than to make up infor
         }
         
     except Exception as e:
-        print(f"AI Error: {e}")
-        print(f"Traceback: {traceback.format_exc()}")
-        
-        # Fallback response
-        return {
-            'response': "I'm having trouble accessing my knowledge base. Here's what I definitely know about PALMS™:\n• We offer warehouse management solutions\n• Our system helps optimize operations\nWould you like to know about any specific feature?",
-            'show_demo_popup': False,
-            'show_options': False
-        }
+        print("=" * 50)
+        print("🔴 ERROR DETAILS")
+        print("=" * 50)
+        print(f"Error Type: {type(e).__name__}")
+        print(f"Error Message: {str(e)}")
+        print(f"User Input: {user_input}")
+        print("-" * 50)
+        print("Context:")
+        print(context if context else "No context available")
+        print("-" * 50)
+        print("Full Traceback:")
+        print(traceback.format_exc())
+        print("=" * 50)
+
+        if isinstance(e, openai.error.AuthenticationError):
+            return {
+                'response': "There seems to be an issue with the API configuration. The team has been notified.",
+                'show_demo_popup': False,
+                'show_options': False
+            }
+        elif isinstance(e, openai.error.APIError):
+            return {
+                'response': "Our AI service is temporarily unavailable. Please try again in a moment.",
+                'show_demo_popup': False,
+                'show_options': False
+            }
+        elif isinstance(e, openai.error.Timeout):
+            return {
+                'response': "The request took too long to process. Please try a simpler question.",
+                'show_demo_popup': False,
+                'show_options': False
+            }
+        else:
+            # General fallback for unknown errors
+            return {
+                'response': "Let me tell you what I know about PALMS™:\n\nWe specialize in warehouse management solutions that optimize operations.\n\nWhat specific aspect would you like to learn more about?",
+                'show_demo_popup': False,
+                'show_options': True
+            }
 
 if __name__ == "__main__":
     # Test the chat system
