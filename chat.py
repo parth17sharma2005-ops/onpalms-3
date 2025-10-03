@@ -333,12 +333,9 @@ Requirements:
                 'show_demo_popup': False,
                 'show_options': True
             }
-        
-        return {
-            'response': cleaned_response,
-            'show_demo_popup': False,
-            'show_options': True
-        }
+        except Exception as openai_error:
+            print(f"OpenAI API error: {str(openai_error)}")
+            raise openai_error
         
     except Exception as e:
         print("=" * 50)
