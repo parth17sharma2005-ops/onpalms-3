@@ -14,6 +14,10 @@ load_dotenv()
 # Initialize OpenAI with the older API format (compatible with openai==0.28.1)
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+# Initialize the knowledge base retriever
+from kb_retriever import KnowledgebaseRetriever
+kb_retriever = KnowledgebaseRetriever(os.path.join(os.path.dirname(__file__), "knowledgebase.txt"))
+
 _response_cache = {}
 CACHE_MAX_SIZE = 100
 
@@ -175,57 +179,23 @@ def is_business_email(email):
     # For non-business emails, we want to show the demo popup
     return is_business, not is_business
 
-def generate_product_context(user_input):
-    """Generate relevant product context based on user input"""
-    context_parts = []
+def generate_context_from_query(user_input: str) -> str:
+    """Generate relevant context for the user query using RAG"""
+    # Retrieve relevant sections from knowledgebase
+    context = kb_retriever.retrieve_relevant_context(user_input, top_k=3)
     
-    # Always include base product information
-    context_parts.append("PALMS™ Product Information:")
-    for name, desc in PALMS_PRODUCTS.items():
-        context_parts.append(f"{name}: {desc}")
-    
-    # Add detailed features for relevant queries
+    # Add any specific product mentions
+    product_mentions = []
     user_input_lower = user_input.lower()
-    if any(word in user_input_lower for word in ['product', 'offer', 'solution', 'service', 'feature', 'capability']):
-        features = {
-            "WMS": [
-                "Real-time inventory tracking",
-                "Automated order processing",
-                "Warehouse space optimization",
-                "Stock movement tracking"
-            ],
-            "3PL": [
-                "Multi-warehouse management",
-                "Client portal access",
-                "Billing automation",
-                "Resource allocation"
-            ],
-            "Analytics": [
-                "Performance metrics",
-                "Custom reporting",
-                "Real-time dashboards",
-                "Trend analysis"
-            ],
-            "Mobile": [
-                "Barcode scanning",
-                "Mobile picking",
-                "Real-time updates",
-                "Worker tracking"
-            ],
-            "Enterprise": [
-                "Multi-site management",
-                "Advanced integrations",
-                "Custom workflows",
-                "Enterprise scaling"
-            ]
-        }
-        
-        for name, product_features in features.items():
-            if name.lower() in user_input_lower or any(f.lower() in user_input_lower for f in product_features):
-                context_parts.append(f"\nPALMS™ {name} Features:")
-                context_parts.extend([f"- {feature}" for feature in product_features])
+    for name, desc in PALMS_PRODUCTS.items():
+        if name.lower() in user_input_lower:
+            product_mentions.append(f"PALMS™ {name}: {desc}")
     
-    return "\n".join(context_parts)
+    if product_mentions:
+        context = "Specifically mentioned products:\n" + "\n".join(product_mentions) + "\n\n" + context
+    
+    print(f"📚 Retrieved context length: {len(context)} characters")
+    return context
 
 def get_chat_response(user_input, extra_context=''):
     """Main chat response function with enhanced context handling and validation"""
@@ -262,58 +232,30 @@ def get_chat_response(user_input, extra_context=''):
                 'show_options': False
             }
         
-        # Get relevant content from WordPress
-        try:
-            retrieved_content = retrieve(user_input, n_results=5)
-            print(f"📚 Retrieved content length: {len(retrieved_content) if retrieved_content else 0} items")
-        except Exception as retrieve_error:
-            print(f"⚠️ Content retrieval error: {str(retrieve_error)}")
-            retrieved_content = []
-        
-        # Always include base product information
-        product_context = ["PALMS™ Product Information:"]
-        for name, desc in PALMS_PRODUCTS.items():
-            product_context.append(f"{name}: {desc}")
-        
-        # Add detailed features for relevant queries
-        user_input_lower = user_input.lower()
-        if any(word in user_input_lower for word in ['product', 'offer', 'solution', 'service', 'feature', 'capability']):
-            for name, features in {
-                "WMS": ["Real-time inventory tracking", "Automated order processing", "Warehouse optimization"],
-                "3PL": ["Multi-warehouse management", "Client portal", "Billing automation"],
-                "Analytics": ["Performance metrics", "Custom reporting", "Real-time dashboards"],
-                "Mobile": ["Barcode scanning", "Mobile picking", "Real-time updates"],
-                "Enterprise": ["Multi-site management", "Advanced integrations", "Custom workflows"]
-            }.items():
-                product_context.append(f"\nPALMS™ {name} Features:")
-                product_context.extend([f"- {feature}" for feature in features])
-        
-        # Combine contexts with proper formatting
-        context_parts = ["\n".join(product_context)]
-        if retrieved_content:
-            context_parts.append("\nAdditional Information:\n" + "\n".join(retrieved_content))
-        
-        context = "\n\n".join(context_parts)
-        print(f"📝 Final context length: {len(context)} characters")
-        
-        # Generate context based on user input
-        context = generate_product_context(user_input)
+        # Generate context using RAG
+        context = generate_context_from_query(user_input)
         print(f"📝 Generated context length: {len(context)} characters")
+
+        if extra_context:
+            context = f"{context}\n\nAdditional Context:\n{extra_context}"
+            print(f"📝 Final context with extra information: {len(context)} characters")
         
-        # Create the prompt with simplified guidelines
-        messages = [
-            {"role": "system", "content": SYSTEM_PERSONA},
-            {"role": "user", "content": f"""
-Context:
+        # Create system message with context
+        system_msg = f"""You are PALMS™ Bot - a warehouse management expert. Use this context to answer accurately:
+
 {context}
 
-User question: {user_input}
+CRITICAL RULES:
+1. FORMAT RESPONSES:
+   - First line: Direct answer (max 20 words)
+   - Second line: Follow-up question (max 10 words)
+2. ONLY use information from the context
+3. For pricing/implementation questions, suggest contacting sales
+4. Keep responses concise and focused"""
 
-Requirements:
-1. Answer directly using the context provided
-2. Keep responses short and focused
-3. End with a relevant follow-up question
-"""}
+        messages = [
+            {"role": "system", "content": system_msg},
+            {"role": "user", "content": user_input}
         ]
         
         # Get response from OpenAI
